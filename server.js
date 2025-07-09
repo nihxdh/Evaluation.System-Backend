@@ -14,12 +14,7 @@ const noticeRoutes = require('./routes/notice.routes');
 const app = express();
 
 // CORS configuration
-app.use(cors({
-  origin: 'http://localhost:5173', // Your frontend URL
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-  credentials: false // Set to false since we're using token-based auth
-}));
+app.use(cors());
 
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));

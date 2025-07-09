@@ -260,6 +260,67 @@ router.get('/:id/download/:filename', async (req, res) => {
   }
 });
 
+// Fix assignment targetYear inconsistencies (admin only)
+router.post('/fix-target-years', adminAuth, async (req, res) => {
+  try {
+    // Get all assignments
+    const allAssignments = await Assignment.find({});
+    console.log('Found', allAssignments.length, 'assignments to process');
+
+    let fixedCount = 0;
+    const results = [];
+
+    for (const assignment of allAssignments) {
+      const originalTargetYear = assignment.targetYear;
+      
+      // Fix the targetYear based on the current value
+      let newTargetYear;
+      if (!assignment.targetYear || assignment.targetYear === '') {
+        newTargetYear = '1st';
+      } else if (assignment.targetYear === '2') {
+        newTargetYear = '2nd';
+      } else if (assignment.targetYear === '3') {
+        newTargetYear = '3rd';
+      } else if (assignment.targetYear === '4') {
+        newTargetYear = '4th';
+      } else if (assignment.targetYear === '1') {
+        newTargetYear = '1st';
+      } else {
+        // If it's already in correct format, keep it
+        newTargetYear = assignment.targetYear;
+      }
+      
+      // Only update if there's a change
+      if (originalTargetYear !== newTargetYear) {
+        assignment.targetYear = newTargetYear;
+        await assignment.save();
+        fixedCount++;
+        
+        results.push({
+          id: assignment._id,
+          title: assignment.title,
+          original: originalTargetYear,
+          fixed: newTargetYear
+        });
+      }
+    }
+
+    res.json({
+      message: `Fixed ${fixedCount} out of ${allAssignments.length} assignments`,
+      totalAssignments: allAssignments.length,
+      fixedCount: fixedCount,
+      results: results
+    });
+
+  } catch (error) {
+    console.error('Fix assignments error:', error);
+    res.status(500).json({ 
+      message: 'Error fixing assignments',
+      error: error.message 
+    });
+  }
+});
+
 // Delete assignment (admin only)
 router.delete('/:id', adminAuth, async (req, res) => {
   try {
